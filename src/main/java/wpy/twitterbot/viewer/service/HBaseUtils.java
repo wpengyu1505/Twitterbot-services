@@ -14,6 +14,7 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import wpy.twitterbot.viewer.model.DailyStats;
 import wpy.twitterbot.viewer.model.Sentiment;
 
 public class HBaseUtils {
@@ -26,6 +27,10 @@ public class HBaseUtils {
     private static final byte[] AROUSAL_QUALIFIER = Bytes.toBytes("AROUSAL");
     private static final byte[] DOMINANCE_QUALIFIER = Bytes.toBytes("DOMINANCE");
     private static final byte[] KEYWORDS_QUALIFIER = Bytes.toBytes("KEYWORD");
+
+    private static final String TBL_STATS = "STATS";
+    private static final byte[] VOLUME_QUALIFIER = Bytes.toBytes("VOLUME");
+    private static final byte[] PRICE_QUALIFIER = Bytes.toBytes("PRICE");
 
     private Configuration conf = null;
 
@@ -78,6 +83,37 @@ public class HBaseUtils {
         }
 
         return sentiments;
+    }
+
+    public ArrayList<DailyStats> getStats(String symbol) throws IOException {
+
+        HTable table = new HTable(conf, TBL_STATS);
+
+        String startRowKey = symbol;
+        Scan scan = new Scan();
+        scan.setCaching(10);
+        scan.setCacheBlocks(true);
+        scan.setStartRow(Bytes.toBytes(startRowKey));
+        ResultScanner scanner = table.getScanner(scan);
+        int counter = 0;
+
+        ArrayList<DailyStats> stats = new ArrayList<DailyStats>();
+        for (Result result : scanner) {
+            String rowKey = Bytes.toString(result.getRow());
+            String currSymbol = rowKey.split("\\|")[0];
+            String date = rowKey.split("\\|")[1];
+
+            if (!currSymbol.equals(symbol)) {
+                break;
+            } else {
+                String valence = Bytes.toString(result.getColumnLatest(SENTIMETN_FAMILY, VALENCE_QUALIFIER).getValue());
+                String price = Bytes.toString(result.getColumnLatest(SENTIMETN_FAMILY, PRICE_QUALIFIER).getValue());
+                String volume = Bytes.toString(result.getColumnLatest(SENTIMETN_FAMILY, VOLUME_QUALIFIER).getValue());
+                stats.add(new DailyStats(date, valence, volume, price));
+            }
+        }
+
+        return stats;
     }
 
 }
