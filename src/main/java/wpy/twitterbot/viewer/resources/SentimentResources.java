@@ -32,9 +32,12 @@ public class SentimentResources {
 
     @GET
     @Path("/{symbol}")
-    public String getSentimentBySymbol(@PathParam("symbol") String symbol, @QueryParam("date") String date)
+    public String get(@PathParam("symbol") String symbol, @QueryParam("date") String date)
             throws IOException, ParseException {
-        return service.get(symbol, date);
+        if (date != null) {
+            return service.get(symbol, date);
+        } else {
+            return service.getStats(symbol);
+        }
     }
-
 }
