@@ -36,6 +36,8 @@ public class HBaseUtils {
 
     public HBaseUtils() {
         conf = HBaseConfiguration.create();
+        // Actual property is in hbase-site.xml
+        conf.set("hbase.zookeeper.quorum", "localhost");
     }
 
     @SuppressWarnings("deprecation")
@@ -74,7 +76,7 @@ public class HBaseUtils {
             for (String word : keyword.split("-")) {
                 keywords.add(word);
             }
-            sentiments.add(new Sentiment(datetime, tweet, valence, arousal, keywords));
+            sentiments.add(new Sentiment(tweet, datetime, valence, arousal, keywords));
             counter++;
 
             if (counter >= 20) {
